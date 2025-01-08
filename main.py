@@ -7,15 +7,12 @@ import json
 from dotenv import load_dotenv
 import os
 
-# Включаем логирование
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Загрузка переменных окружения из .env файла
 load_dotenv()
 token = os.getenv('TELEGRAM_TOKEN')
 
-# Словарь для перевода знаков зодиака на русский язык
 signs_translation = {
     'aries': 'Овен',
     'taurus': 'Телец',
@@ -31,22 +28,18 @@ signs_translation = {
     'pisces': 'Рыбы'
 }
 
-# Функция для получения гороскопа
 def get_horoscope(sign: str) -> str:
     url = f"https://horo.mail.ru/prediction/{sign}/today/"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    # Найти тег <script> с нужным содержимым
     script_tag = soup.find('script', id='horo-script')
     if not script_tag:
         return "Не удалось найти гороскоп. Попробуйте позже."
     
-    # Извлечь JSON-данные из тега <script>
     script_content = script_tag.string
     json_data = json.loads(script_content.split('window.__PRELOADED_STATE__ = ')[1].rstrip(';'))
     
-    # Извлечь текст гороскопа
     horoscope_data = json_data.get('page_data', {}).get('prediction', {}).get('text', [])
     horoscope_text = "\n\n".join([item['html'] for item in horoscope_data if item['type'] == 'html'])
     
@@ -55,12 +48,10 @@ def get_horoscope(sign: str) -> str:
     else:
         return "Не удалось получить гороскоп. Попробуйте позже."
 
-# Функция для оформления гороскопа
 def format_horoscope(sign: str, horoscope: str) -> str:
     sign_russian = signs_translation.get(sign, sign)
     return f'**Гороскоп для знака "{sign_russian}"**\n\n{horoscope}'
 
-# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
         [KeyboardButton("/horoscope_aries"), KeyboardButton("/horoscope_taurus")],
@@ -74,13 +65,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text('Привет! Я бот, который присылает гороскоп. Напиши /help, чтобы посмотреть все команды. Используйте команды /horoscope_<sign> для получения гороскопа.', reply_markup=reply_markup)
 
-# Команда для получения гороскопа
 async def horoscope(update: Update, context: ContextTypes.DEFAULT_TYPE, sign: str) -> None:
     horoscope_text = get_horoscope(sign)
     formatted_horoscope = format_horoscope(sign, horoscope_text)
     await update.message.reply_text(formatted_horoscope, parse_mode='Markdown')
 
-# Функции для команд гороскопов
 async def horoscope_aries(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await horoscope(update, context, 'aries')
 
@@ -117,7 +106,6 @@ async def horoscope_aquarius(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def horoscope_pisces(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await horoscope(update, context, 'pisces')
 
-# Команда /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     help_text = (
         "Доступные команды:\n"
@@ -136,12 +124,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
     await update.message.reply_text(help_text)
 
-# Основная функция
 def main():
-    # Создаем приложение
     application = ApplicationBuilder().token(token).build()
 
-    # Регистрируем команды
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("horoscope_aries", horoscope_aries))
@@ -157,9 +142,8 @@ def main():
     application.add_handler(CommandHandler("horoscope_aquarius", horoscope_aquarius))
     application.add_handler(CommandHandler("horoscope_pisces", horoscope_pisces))
 
-    # chat_id = '2392612432'  # Замените на ваш chat_id
+    # chat_id = '2392612432'
 
-    # Запускаем бота
     application.run_polling()
 
 if __name__ == '__main__':
