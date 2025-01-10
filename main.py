@@ -7,7 +7,8 @@ import json
 from dotenv import load_dotenv
 import os
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s', level=logging.INFO)
+# Исправление уровня логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
@@ -35,6 +36,7 @@ def get_horoscope(sign: str) -> str:
     
     script_tag = soup.find('script', id='horo-script')
     if not script_tag:
+        logger.error("Не удалось найти гороскоп для знака %s", sign)
         return "Не удалось найти гороскоп. Попробуйте позже."
     
     script_content = script_tag.string
@@ -46,6 +48,7 @@ def get_horoscope(sign: str) -> str:
     if horoscope_text:
         return BeautifulSoup(horoscope_text, 'html.parser').get_text(strip=True)
     else:
+        logger.error("Не удалось получить гороскоп для знака %s", sign)
         return "Не удалось получить гороскоп. Попробуйте позже."
 
 def format_horoscope(sign: str, horoscope: str) -> str:
@@ -53,6 +56,7 @@ def format_horoscope(sign: str, horoscope: str) -> str:
     return f'**Гороскоп для знака "{sign_russian}"**\n\n{horoscope}'
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info("Команда /start вызвана")
     keyboard = [
         [KeyboardButton("/horoscope_aries"), KeyboardButton("/horoscope_taurus")],
         [KeyboardButton("/horoscope_gemini"), KeyboardButton("/horoscope_cancer")],
@@ -66,6 +70,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text('Привет! Я бот, который присылает гороскоп. Напиши /help, чтобы посмотреть все команды. Используйте команды /horoscope_<sign> для получения гороскопа.', reply_markup=reply_markup)
 
 async def horoscope(update: Update, context: ContextTypes.DEFAULT_TYPE, sign: str) -> None:
+    logger.info("Запрос гороскопа для знака %s", sign)
     horoscope_text = get_horoscope(sign)
     formatted_horoscope = format_horoscope(sign, horoscope_text)
     await update.message.reply_text(formatted_horoscope, parse_mode='Markdown')
@@ -107,6 +112,7 @@ async def horoscope_pisces(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await horoscope(update, context, 'pisces')
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info("Команда /help вызвана")
     help_text = (
         "Доступные команды:\n"
         "/horoscope_aries - Гороскоп для Овна\n"
@@ -125,9 +131,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(help_text)
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.warning("Неизвестная команда: %s", update.message.text)
     await update.message.reply_text("Извините, я не понимаю эту команду. Пожалуйста, используйте /help для списка доступных команд.")
 
 def main():
+    logger.info("Запуск бота")
     application = ApplicationBuilder().token(token).build()
 
     application.add_handler(CommandHandler("start", start))
