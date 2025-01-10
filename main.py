@@ -2,7 +2,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import CommandHandler, ContextTypes, ApplicationBuilder
+from telegram.ext import CommandHandler, ContextTypes, ApplicationBuilder, MessageHandler, filters
 import json
 from dotenv import load_dotenv
 import os
@@ -124,6 +124,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
     await update.message.reply_text(help_text)
 
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Извините, я не понимаю эту команду. Пожалуйста, используйте /help для списка доступных команд.")
+
 def main():
     application = ApplicationBuilder().token(token).build()
 
@@ -142,7 +145,7 @@ def main():
     application.add_handler(CommandHandler("horoscope_aquarius", horoscope_aquarius))
     application.add_handler(CommandHandler("horoscope_pisces", horoscope_pisces))
 
-    # chat_id = '2392612432'
+    application.add_handler(MessageHandler(filters.COMMAND, unknown_command))
 
     application.run_polling()
 
