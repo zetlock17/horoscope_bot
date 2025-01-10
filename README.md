@@ -136,5 +136,4 @@ application.add_handler(CommandHandler("my_new_command", my_new_command))
 
 ## Лицензия
 Этот проект лицензирован под лицензией MIT. Подробности см. в файле LICENSE.
-```
 
