@@ -41,7 +41,7 @@ Telegram-бот предоставляет ежедневные гороскоп
 2. Запустите бота:
    
    ```bash
-   python bot.py
+   python main.py
    ```
 
 ---
